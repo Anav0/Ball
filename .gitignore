@@ -367,3 +367,4 @@ FodyWeavers.xsd
 
 # Compiled shaders folder
 /shaders/compiled/*
+/Game/shaders/compiled
