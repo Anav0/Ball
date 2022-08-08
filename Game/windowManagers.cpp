@@ -28,12 +28,12 @@ public:
 		}
 	}
 
-	void init(GLFWframebuffersizefun onResizeCallback) {
+	void init(int width, int height, const char* windowName, GLFWframebuffersizefun onResizeCallback) {
 		glfwInit();
 
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-		window = glfwCreateWindow(800, 600, "Vulkan", nullptr, nullptr);
+		window = glfwCreateWindow(width, height, windowName, nullptr, nullptr);
 		glfwSetWindowUserPointer(window, this);
 		glfwSetFramebufferSizeCallback(window, onResizeCallback);
 	}

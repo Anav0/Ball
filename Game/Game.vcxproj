@@ -145,8 +145,8 @@
     <None Include="shaders\vert.spv" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="vulkan.hpp" />
-    <ClInclude Include="windowManagers.hpp" />
+    <ClInclude Include="vulkan.cpp" />
+    <ClInclude Include="windowManagers.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

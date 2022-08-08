@@ -12,8 +12,8 @@
 #include <optional>
 #include <set>
 
-#include "vulkan.hpp"
-#include "windowManagers.hpp"
+#include "vulkan.cpp"
+#include "windowManagers.cpp"
 
 class Basic3dProgram {
 public:
@@ -21,10 +21,12 @@ public:
 	Vulkan vulkan;
 
 	void run() {
-		windowManager.init(vulkan.resizeCallback);
+		windowManager.init(1024, 720, "Ball", vulkan.resizeCallback);
 		vulkan.createInstance(&windowManager);
 		windowManager.createSurface(vulkan.instance, &vulkan.surface);
 		vulkan.init();
+
+		//vulkan.drawRect(0.5f, 0.5f, 10, 10);
 
 		while (windowManager.isWindowOpen()) {
 			windowManager.pullEvents();

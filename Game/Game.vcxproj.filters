@@ -33,10 +33,10 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="vulkan.hpp">
+    <ClInclude Include="vulkan.cpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="windowManagers.hpp">
+    <ClInclude Include="windowManagers.cpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

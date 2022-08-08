@@ -21,23 +21,8 @@
 #include <optional>
 #include <set>
 
-#include "windowManagers.hpp"
-
-const int MAX_FRAMES_IN_FLIGHT = 2;
-
-const std::vector<const char*> validationLayers = {
-	"VK_LAYER_KHRONOS_validation"
-};
-
-const std::vector<const char*> deviceExtensions = {
-	VK_KHR_SWAPCHAIN_EXTENSION_NAME
-};
-
-#ifdef NDEBUG
-const bool enableValidationLayers = false;
-#else
-const bool enableValidationLayers = true;
-#endif
+#include "windowManagers.cpp"
+#include "basic.cpp"
 
 VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger) {
 	auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
@@ -71,68 +56,36 @@ struct SwapChainSupportDetails {
 	std::vector<VkPresentModeKHR> presentModes;
 };
 
-struct Vertex {
-	glm::vec2 pos;
-	glm::vec3 color;
-	glm::vec2 texCoord;
+#ifdef NDEBUG
+const bool enableValidationLayers = false;
+#else
+const bool enableValidationLayers = true;
+#endif
 
-	static VkVertexInputBindingDescription getBindingDescription() {
-		VkVertexInputBindingDescription bindingDescription{};
-		bindingDescription.binding = 0;
-		bindingDescription.stride = sizeof(Vertex);
-		bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+const int MAX_FRAMES_IN_FLIGHT = 2;
 
-		return bindingDescription;
-	}
-
-	static std::array<VkVertexInputAttributeDescription, 3> getAttributeDescriptions() {
-		std::array<VkVertexInputAttributeDescription, 3> attributeDescriptions{};
-
-		attributeDescriptions[0].binding = 0;
-		attributeDescriptions[0].location = 0;
-		attributeDescriptions[0].format = VK_FORMAT_R32G32_SFLOAT;
-		attributeDescriptions[0].offset = offsetof(Vertex, pos);
-
-		attributeDescriptions[1].binding = 0;
-		attributeDescriptions[1].location = 1;
-		attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-		attributeDescriptions[1].offset = offsetof(Vertex, color);
-
-		attributeDescriptions[2].binding = 0;
-		attributeDescriptions[2].location = 2;
-		attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
-		attributeDescriptions[2].offset = offsetof(Vertex, texCoord);
-
-		return attributeDescriptions;
-	}
+const std::vector<const char*> validationLayers = {
+	"VK_LAYER_KHRONOS_validation"
 };
 
-struct UniformBufferObject {
-	alignas(16) glm::mat4 model;
-	alignas(16) glm::mat4 view;
-	alignas(16) glm::mat4 proj;
-};
-
-const std::vector<Vertex> vertices = {
-	{{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-	{{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
-	{{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
-	{{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}}
-};
-
-const std::vector<uint16_t> indices = {
-	0, 1, 2, 2, 3, 0
+const std::vector<const char*> deviceExtensions = {
+	VK_KHR_SWAPCHAIN_EXTENSION_NAME
 };
 
 class Vulkan {
 public:
 	VkInstance instance = NULL;
+
 	VkSurfaceKHR surface;
 	GlfwWindowManager* window;
+
+	std::vector<Vertex> vertices;
+	std::vector<uint32_t> indices;
 
 	void init() {
 		if (instance == NULL)
 			std::runtime_error("should create vulkan instance before init function is called!");
+
 
 		setupDebugMessenger();
 		pickPhysicalDevice();
@@ -147,6 +100,7 @@ public:
 		createTextureImage();
 		createTextureImageView();
 		createTextureSampler();
+		drawRect(0.5f, 0.5f, 10, 10);
 		createVertexBuffer();
 		createIndexBuffer();
 		createUniformBuffers();
@@ -244,6 +198,21 @@ public:
 		if (vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS) {
 			throw std::runtime_error("failed to create instance!");
 		}
+	}
+
+	void drawRect(float x, float y, uint8_t width, uint8_t height) {
+
+		vertices.push_back({ {-x, -y, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f} });
+		vertices.push_back({ {x, -y, 0.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f} });
+		vertices.push_back({ {x, y, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f} });
+		vertices.push_back({ {-x, y, 0.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f} });
+
+		indices.push_back(size(vertices) - 4);
+		indices.push_back(size(vertices) - 3);
+		indices.push_back(size(vertices) - 2);
+		indices.push_back(size(vertices) - 2);
+		indices.push_back(size(vertices) - 1);
+		indices.push_back(size(vertices) - 4);
 	}
 
 	void drawFrame() {
@@ -950,7 +919,7 @@ private:
 	}
 
 	void createVertexBuffer() {
-		VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
+		VkDeviceSize bufferSize = sizeof(Vertex) * vertices.size();
 
 		VkBuffer stagingBuffer;
 		VkDeviceMemory stagingBufferMemory;
@@ -970,7 +939,7 @@ private:
 	}
 
 	void createIndexBuffer() {
-		VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
+		VkDeviceSize bufferSize = sizeof(uint32_t) * indices.size();
 
 		VkBuffer stagingBuffer;
 		VkDeviceMemory stagingBufferMemory;
@@ -1201,7 +1170,7 @@ private:
 		VkDeviceSize offsets[] = { 0 };
 		vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
 
-		vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT16);
+		vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
 
 		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[currentFrame], 0, nullptr);
 
@@ -1243,8 +1212,8 @@ private:
 
 		UniformBufferObject ubo{};
 		ubo.model = glm::rotate(glm::mat4(1.0f), glm::radians(0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-		ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-		ubo.proj = glm::perspective(glm::radians(20.0f), swapChainExtent.width / (float)swapChainExtent.height, 0.1f, 10.0f);
+		ubo.view = glm::lookAt(glm::vec3(1.2f, 1.2f, 1.2f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+		ubo.proj = glm::perspective(glm::radians(45.0f), swapChainExtent.width / (float)swapChainExtent.height, 0.1f, 10.0f);
 		ubo.proj[1][1] *= -1;
 
 		void* data;
